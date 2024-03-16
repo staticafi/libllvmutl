@@ -172,6 +172,18 @@ llvm::Instruction* llvm_constant_expr_to_instruction(llvm::ConstantExpr* const e
                         succ_instruction);
         }
 
+    case llvm::Instruction::ICmp:
+        {
+
+            return ::llvm::ICmpInst::Create(
+                        static_cast<llvm::Instruction::OtherOps>(expression->getOpcode()),
+                        (llvm::CmpInst::Predicate)expression->getPredicate(),
+                        expression->getOperand(0),
+                        expression->getOperand(1),
+                        expression->getName(),
+                        succ_instruction);
+        }
+
     case llvm::Instruction::Select:
     case llvm::Instruction::ExtractElement:
     case llvm::Instruction::InsertElement:
