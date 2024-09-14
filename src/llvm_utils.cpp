@@ -17,6 +17,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/PassManager.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Passes/PassPlugin.h>
@@ -24,7 +25,6 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/raw_os_ostream.h>
-#include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/Utils.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include <llvm/DebugInfo/DIContext.h>
@@ -52,36 +52,6 @@ std::string llvm_to_str(llvm::Value const* const value)
 std::string llvm_to_str(llvm::Type const* const type)
 {
     return __llvm_to_str(type);
-}
-
-
-llvm::Type* llvm_deref_if_pointer(llvm::Type* const type)
-{
-    if (auto ptr = llvm::dyn_cast<llvm::PointerType>(type))
-        return ptr->getPointerElementType();
-    return type;
-}
-
-
-llvm::Type* llvm_lowered_type(llvm::Value const* value_ptr)
-{
-    if (auto instruction_ptr = llvm::dyn_cast<llvm::Instruction>(value_ptr))
-        switch (instruction_ptr->getOpcode())
-        {
-        case llvm::Instruction::Load:
-        case llvm::Instruction::BitCast:
-        case llvm::Instruction::GetElementPtr:
-        case llvm::Instruction::Call:
-        case llvm::Instruction::Ret:
-        case llvm::Instruction::IntToPtr:
-            break;
-        default:
-            return llvm_deref_if_pointer(instruction_ptr->getType());
-            break;
-        }
-    else if (llvm::isa<llvm::GlobalVariable>(value_ptr))
-        return llvm_deref_if_pointer(value_ptr->getType());
-    return value_ptr->getType();
 }
 
 
@@ -161,12 +131,9 @@ llvm::Instruction* llvm_constant_expr_to_instruction(llvm::ConstantExpr* const e
                             expression->getName(),
                             succ_instruction);
 
-            auto pointee_type = expression->getType();
-            auto ptr = expression->getOperand(0);                            
             return llvm::GetElementPtrInst::Create(
-                        llvm::cast<llvm::PointerType>(ptr->getType()->getScalarType())->isOpaqueOrPointeeTypeMatches(pointee_type) ?
-                            pointee_type : llvm::cast<llvm::PointerType>(ptr->getType()->getScalarType())->getPointerElementType(),
-                        ptr,
+                        llvm::cast<llvm::GetElementPtrInst>(expression->getAsInstruction())->getSourceElementType(),
+                        expression->getOperand(0),
                         llvm::makeArrayRef(idxs),
                         expression->getName(),
                         succ_instruction);

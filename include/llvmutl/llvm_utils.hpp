@@ -7,6 +7,7 @@
 #       pragma warning(disable : 4624 4996 4146 4800 4996 4005 4355 4244 4267)
 #   endif
 #   include <llvm/IR/Instructions.h>
+#   include <llvm/IR/Constants.h>
 #   if COMPILER() == COMPILER_VC()
 #       pragma warning(pop)
 #   endif
@@ -17,8 +18,6 @@
 std::string llvm_to_str(llvm::Value const* value);
 std::string llvm_to_str(llvm::Type const* type);
 inline std::string llvm_to_str(llvm::Constant const* const c) { return llvm_to_str((llvm::Value*)c); }
-llvm::Type* llvm_deref_if_pointer(llvm::Type* type);
-llvm::Type* llvm_lowered_type(llvm::Value const* value_ptr);
 std::size_t llvm_sizeof(llvm::Type* type, llvm::Module& M);
 bool llvm_is_zero(llvm::Value* value);
 llvm::Instruction* llvm_constant_expr_to_instruction(llvm::ConstantExpr* expression, llvm::Instruction* succ_instruction = nullptr);

@@ -8,6 +8,8 @@ add_library(${THIS_TARGET_NAME}
     "${${THIS_TARGET_NAME}_CPP}"
     )
 
+target_compile_options(${THIS_TARGET_NAME} PUBLIC "-Wno-deprecated")
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 else()
     include_directories(${LLVM_INCLUDE_DIRS})
