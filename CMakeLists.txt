@@ -10,12 +10,8 @@ add_library(${THIS_TARGET_NAME}
 
 target_compile_options(${THIS_TARGET_NAME} PUBLIC "-Wno-deprecated")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-else()
-    include_directories(${LLVM_INCLUDE_DIRS})
-endif()
+include_directories(${LLVM_INCLUDE_DIRS})
 
-    
 set_target_properties(${THIS_TARGET_NAME} PROPERTIES
     DEBUG_OUTPUT_NAME "${THIS_TARGET_NAME}_${CMAKE_SYSTEM_NAME}_Debug"
     RELEASE_OUTPUT_NAME "${THIS_TARGET_NAME}_${CMAKE_SYSTEM_NAME}_Release"
