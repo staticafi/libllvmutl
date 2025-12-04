@@ -60,6 +60,36 @@ std::size_t llvm_sizeof(llvm::Type* const type, llvm::Module& M)
     return M.getDataLayout().getTypeAllocSize(type);
 }
 
+std::size_t llvm_num_storage_bits(llvm::Type* const type, llvm::Module& M)
+{
+    if (type->isIntegerTy())
+        return llvm::cast<llvm::IntegerType>(type)->getBitWidth();
+    else if (type->isHalfTy() || type->isFloatTy() || type->isDoubleTy() || type->isFP128Ty() || type->isX86_MMXTy() || type->isBFloatTy())
+        return M.getDataLayout().getTypeSizeInBits(type);
+    else if (type->isPointerTy())
+        return M.getDataLayout().getPointerSizeInBits();
+    else if (type->isVectorTy())
+    {
+        auto* vecTy = llvm::cast<llvm::VectorType>(type);
+        llvm::Type* elemTy = vecTy->getElementType();
+        if (auto* fixed = llvm::dyn_cast<llvm::FixedVectorType>(vecTy))
+            return fixed->getNumElements() * llvm_num_storage_bits(elemTy, M);
+        else if (auto* scalable = llvm::dyn_cast<llvm::ScalableVectorType>(vecTy))
+            return scalable->getElementCount().getKnownMinValue() * llvm_num_storage_bits(elemTy, M);
+    }
+    else if (type->isArrayTy())
+    {
+        auto* arrTy = llvm::cast<llvm::ArrayType>(type);
+        return arrTy->getNumElements() * llvm_num_storage_bits(arrTy->getElementType(), M);
+    }
+    else if (type->isStructTy())
+        return M.getDataLayout().getTypeSizeInBits(type);
+
+    ASSUMPTION(type->isVoidTy());
+
+    return 0;
+}
+
 
 bool llvm_is_zero(llvm::Value* const value)
 {

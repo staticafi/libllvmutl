@@ -19,6 +19,7 @@ std::string llvm_to_str(llvm::Value const* value);
 std::string llvm_to_str(llvm::Type const* type);
 inline std::string llvm_to_str(llvm::Constant const* const c) { return llvm_to_str((llvm::Value*)c); }
 std::size_t llvm_sizeof(llvm::Type* type, llvm::Module& M);
+std::size_t llvm_num_storage_bits(llvm::Type* const type, llvm::Module& M);
 bool llvm_is_zero(llvm::Value* value);
 llvm::Instruction* llvm_constant_expr_to_instruction(llvm::ConstantExpr* expression, llvm::Instruction* succ_instruction = nullptr);
 bool llvm_basic_block_contains_intrinsic_before_instruction(
