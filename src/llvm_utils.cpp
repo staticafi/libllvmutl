@@ -7,6 +7,7 @@
 #    pragma warning(push)
 #    pragma warning(disable : 4624 4996 4146 4800 4996 4005 4355 4244 4267)
 #endif
+#include <llvm/Config/llvm-config.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instruction.h>
@@ -64,7 +65,17 @@ std::size_t llvm_num_storage_bits(llvm::Type* const type, llvm::Module& M)
 {
     if (type->isIntegerTy())
         return llvm::cast<llvm::IntegerType>(type)->getBitWidth();
-    else if (type->isHalfTy() || type->isFloatTy() || type->isDoubleTy() || type->isFP128Ty() || type->isX86_MMXTy() || type->isBFloatTy())
+    else if (type->isHalfTy()
+                || type->isFloatTy()
+                || type->isDoubleTy()
+                || type->isFP128Ty()
+                || type->isBFloatTy()
+#if LLVM_VERSION_MAJOR <= 18
+                || type->isX86_MMXTy() 
+#else
+                // The feature was removed.
+#endif
+                )
         return M.getDataLayout().getTypeSizeInBits(type);
     else if (type->isPointerTy())
         return M.getDataLayout().getPointerSizeInBits();
@@ -164,11 +175,16 @@ llvm::Instruction* llvm_constant_expr_to_instruction(llvm::ConstantExpr* const e
             return llvm::GetElementPtrInst::Create(
                         llvm::cast<llvm::GetElementPtrInst>(expression->getAsInstruction())->getSourceElementType(),
                         expression->getOperand(0),
+#if LLVM_VERSION_MAJOR <= 18
                         llvm::makeArrayRef(idxs),
+#else
+                        idxs,
+#endif
                         expression->getName(),
                         succ_instruction);
         }
 
+#if LLVM_VERSION_MAJOR <= 18
     case llvm::Instruction::ICmp:
         {
 
@@ -180,6 +196,9 @@ llvm::Instruction* llvm_constant_expr_to_instruction(llvm::ConstantExpr* const e
                         expression->getName(),
                         succ_instruction);
         }
+#else
+    // The feature was removed.
+#endif
 
     case llvm::Instruction::Select:
     case llvm::Instruction::ExtractElement:
